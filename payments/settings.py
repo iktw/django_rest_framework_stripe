@@ -5,6 +5,7 @@ from .utils import load_path_attr
 
 
 STRIPE_PUBLIC_KEY = settings.STRIPE_PUBLIC_KEY
+STRIPE_SECRET_KEY = settings.STRIPE_SECRET_KEY
 INVOICE_FROM_EMAIL = getattr(
     settings,
     "PAYMENTS_INVOICE_FROM_EMAIL",
@@ -55,3 +56,4 @@ def get_api_key():
         api_key = settings.STRIPE_SECRET_KEY
 
     return api_key
+
