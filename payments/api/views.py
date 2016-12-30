@@ -15,6 +15,7 @@ from .serializers import (
     CurrentCustomerSerializer,
     SubscriptionSerializer,
     CardSerializer,
+    CardTokenSerializer,
     CancelSerializer,
     ChargeSerializer,
     InvoiceSerializer,
@@ -119,6 +120,42 @@ class ChangeCardView(StripeView):
             error_data = {u'error': smart_str(e) or u'Unknown error'}
             return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
+
+class ChangeCardTokenView(StripeView):
+    """
+    Add or update customer card token
+
+    This is useful if you are planing to use strip.js to
+    retrieve the card token. This isolates the full credit
+    card number from your server.
+    """
+    serializer_class = CardTokenSerializer
+
+    def post(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+
+            if serializer.is_valid():
+                validated_data = serializer.validated_data
+
+                customer = self.get_customer()
+
+                token = validated_data['token']
+                customer.update_card(token)
+                send_invoice = customer.card_fingerprint == ""
+
+                if send_invoice:
+                    customer.send_invoice()
+                    customer.retry_unpaid_invoices()
+
+                return Response(validated_data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except stripe.StripeError as e:
+            error_data = {u'error': smart_str(e) or u'Unknown error'}
+            return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
+            
 
 class CancelView(StripeView):
     """ Cancel customer subscription """
