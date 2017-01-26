@@ -553,7 +553,11 @@ class Customer(StripeObject):
         cu = self.stripe_customer
 
         subscription_params = {}
-        if trial_days:
+        # https://stripe.com/docs/api?lang=python#create_subscription-trial_end Special keyword Now is for ending
+        # the trial now
+        if trial_days is 'now':
+            subscription_params["trial_end"] = 'now'
+        elif trial_days:
             subscription_params["trial_end"] = \
                 datetime.datetime.utcnow() + datetime.timedelta(days=trial_days)
         if token:
